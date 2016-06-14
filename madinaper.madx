@@ -1,0 +1,62 @@
+
+system,"ln -fns  /afs/cern.ch/eng/lhc/optics/runII/2015/ db5";
+OPTION, -ECHO, -WARN, -INFO;
+call, file="db5/lhc_as-built.seq";
+!call, file="db5/opt_inj_colltunes.madx";
+!call, file="db5/opt_800_800_800_3000_ion_coll.madx";
+OPTION, ECHO, -WARN, -INFO, -VERIFY;       
+
+beam1:  BEAM, SEQUENCE=LHCB1, BV=1, ENERGY=522340.0,CHARGE=82.0,
+    MASS=193.72917484892244, KBUNCH=518,NPART=2.0E+08,
+    EX=1.29810489714e-09, EY=1.29810489714e-09,ET=1.3665e-05,SIGE=0.00015,SIGT=0.09107;
+        
+    
+
+beam2:  BEAM, SEQUENCE=LHCB2, BV=-1, ENERGY=522340.0,CHARGE=82.0,
+    MASS=193.72917484892244, KBUNCH=518,NPART=2.0E+08,
+    EX=1.29810489714e-09, EY=1.29810489714e-09,ET=1.3665e-05,SIGE=0.00015,SIGT=0.09107;
+        
+    
+
+!SEQEDIT, SEQUENCE=LHCB2;
+!FLATTEN;
+!CYCLE, start=IP5;
+!ENDEDIT;
+    
+
+SELECT, FLAG=TWISS, CLEAR;
+SELECT, FLAG=TWISS, COLUMN = NAME,S,BETX,BETY,ALPX,ALFY,DX,DPX,X,PX,Y,PY,MUX,MUY;
+
+OPTION, -ECHO;
+CALL, FILE='/afs/cern.ch/eng/lhc/optics/V6.503/aperture/layoutapertures.madx';
+!CALL, FILE='/afs/cern.ch/eng/lhc/optics/V6.503/aperture/exp_pipe_model.madx';
+!CALL, FILE='/afs/cern.ch/eng/lhc/optics/V6.503/aperture/exp_pipe_install.madx';
+OPTION, ECHO;
+
+
+USE, PERIOD=lhcb2;
+TWISS, SEQUENCE=LHCB2,FILE='LHCB2.tfs';
+
+MATCH, SEQUENCE=LHCB2;
+CONSTRAINT, SEQUENCE=LHCB2, RANGE=MQ.11L5.B2, X=0.005;
+CONSTRAINT, SEQUENCE=LHCB2, RANGE=MCBH.13L5.B2, X=0, PX=0;
+VARY, NAME=MCBCH.7L5.B2->HKICK, STEP=1.0E-6;
+VARY, NAME=MCBCH.9L5.B2->HKICK, STEP=1.0E-6;
+VARY, NAME=MCBH.13L5.B2->HKICK, STEP=1.0E-6;
+LMDIF, CALLS=500, TOLERANCE=1.0E-15;
+ENDMATCH;
+
+
+TWISS, SEQUENCE=LHCB2,FILE='LHCB2.tfs';
+
+OPTION, -ECHO;
+CALL, FILE='/afs/cern.ch/eng/lhc/optics/V6.503/aperture/aperture.b2.madx';
+CALL, FILE='/afs/cern.ch/eng/lhc/optics/V6.503/aperture/aper_tol.b2.madx';
+OPTION, ECHO;
+
+SELECT, FLAG=APERTURE, COLUMN=NAME,S,N1,APER_1,APER_2,APER_3,APER_4;
+APERTURE,RANGE=#S/#E, FILE='APERTUREB2.TFS';
+
+system, "rm db5";
+
+    
